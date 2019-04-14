@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "Collectable.h"
 #include "GLSL.h"
 #include "GameObject.h"
 #include "MatrixStack.h"
@@ -32,6 +33,7 @@ using namespace glm;
 // game settings
 #define BOARD_SIZE 10
 #define PLAYER_SPEED 2.0f
+#define COLLECTABLE_SPAWN_DELAY 0.5f
 
 class Application : public EventCallbacks {
 
@@ -47,13 +49,13 @@ public:
   shared_ptr<Shape> playerMesh;
 
   // pointers to objects in the scene
-  vector<GameObject*> renderObjects;
+  vector<GameObject *> renderObjects;
 
   // the object that the player controls
   GameObject player;
 
   // for each board space, objects player collects
-  GameObject collectables[BOARD_SIZE][BOARD_SIZE];
+  Collectable collectables[BOARD_SIZE][BOARD_SIZE];
   int collectablesCount = 0;
 
   GameObject ground;
@@ -180,9 +182,8 @@ public:
     playerMesh->createShape(0);
     playerMesh->measure();
     playerMesh->init();
-    player = GameObject(playerMesh, vec3(0, 0, -6),
-                                       vec3(0, PI / 4, 0),
-                                       vec3(0.5f, 0.7f, 0.3f), vec3(0, 0, 0));
+    player = GameObject(playerMesh, vec3(0, 0, -6), vec3(0, PI / 4, 0),
+                        vec3(0.5f, 0.7f, 0.3f), vec3(0, 0, 0));
     renderObjects.push_back(&player);
 
     // collectable mesh only
@@ -190,6 +191,10 @@ public:
     collectableMesh->createShape(0);
     collectableMesh->measure();
     collectableMesh->init();
+  }
+
+  void renderObject(GameObject* renderbject, float deltaTime) {
+    
   }
 
   void render(float deltaTime) {
@@ -245,6 +250,32 @@ public:
       Model->popMatrix();
     }
 
+    // copy and pasted render object for collectables
+    // sloppy should be function to avoid duplicated code
+    for (int x = 0; x < BOARD_SIZE; x++) {
+      for (int y = 0; y < BOARD_SIZE; y++) {
+        Collectable *renderObject = &collectables[x][y];
+        if (renderObject->moved == -1) {
+          continue;
+        }
+        Model->pushMatrix();
+        Model->loadIdentity();
+        renderObject->position =
+          renderObject->position + (renderObject->velocity * deltaTime);
+        Model->translate(renderObject->position);
+        Model->rotate(renderObject->rotation.x, vec3(1, 0, 0));
+        Model->rotate(renderObject->rotation.z, vec3(0, 0, 1));
+        Model->rotate(renderObject->rotation.y, vec3(0, 1, 0));
+        Model->pushMatrix();
+        Model->scale(renderObject->scale);
+        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE,
+                           value_ptr(Model->topMatrix()));
+        renderObject->mesh->draw(prog);
+        Model->popMatrix();
+        Model->popMatrix();
+      }
+    }
+
     // // draw mesh
     // Model->pushMatrix();
     // Model->loadIdentity();
@@ -273,15 +304,89 @@ public:
     }
     int x = rand() % BOARD_SIZE;
     int z = rand() % BOARD_SIZE;
-    collectables[x][z] = GameObject(
-        collectableMesh, vec3(0, 0, 0),
-        vec3(0, -PI / 8, 0), vec3(0.25f, 0.25f, 0.25f), vec3(0, 0, 0));
-    renderObjects.push_back(&collectables[x][z]);
+    collectables[x][z] =
+        Collectable(collectableMesh, vec3(0, 0, 0), vec3(0, -PI / 8, 0),
+                    vec3(0.25f, 0.25f, 0.25f), vec3(0, 0, 0));
+    // renderObjects.push_back(&collectables[x][z]);
     PositionCollectable(&collectables[x][z], x, z);
   }
 
-  void PositionCollectable(GameObject* collectable, int x, int z) {
-    collectable->position = vec3(x - BOARD_SIZE/2, 0, z - 6 - BOARD_SIZE/2 );
+  void PositionCollectable(Collectable *collectable, int x, int z) {
+    collectable->position =
+        vec3(x - BOARD_SIZE / 2 + 0.5f, 0, z - 6 - BOARD_SIZE / 2 + 0.5f);
+  }
+
+  /// only used once, but made a function to break out of double loop
+  /// returns false if no path available
+  int MoveCollectableRandom(int x, int y) {
+    // keep track of wich directions we have checked
+    int dirsFree[] = {1, 1, 1, 1};
+    const vec2 dirs[] = {vec2(-1, 0), vec2(1, 0), vec2(0, -1),
+                         vec2(0, 1)};
+    if (x == 0) {
+      dirsFree[0] = 0;
+    } else if (x == BOARD_SIZE - 1) {
+      dirsFree[1] = 0;
+    }
+    if (y == 0) {
+      dirsFree[2] = 0;
+    } else if (y == BOARD_SIZE - 1) {
+      dirsFree[3] = 0;
+    }
+    int randomDir = -1;
+    int neighbor_x = -1;
+    int neighbor_y = -1;
+    while (dirsFree[0] != 0 || dirsFree[1] != 0 || dirsFree[2] != 0 ||
+           dirsFree[3] != 0) {
+      int randomCheck;
+      do {
+        randomCheck = rand() % 4;
+      } while (dirsFree[randomCheck] == 0);
+      neighbor_x = x + dirs[randomCheck].x;
+      neighbor_y = y + dirs[randomCheck].y;
+      if (collectables[neighbor_x][neighbor_y].moved != -1) {
+        dirsFree[randomCheck] = 0;
+      } else {
+        randomDir = randomCheck;
+        break;
+      }
+    }
+    if (randomDir == -1) {
+      return 0;
+    }
+    // swap the empty adjacent cell with this one that is moving there
+    Collectable temp = collectables[x][y];
+    collectables[x][y] = collectables[neighbor_x][neighbor_y];
+    collectables[neighbor_x][neighbor_y] = temp;
+    collectables[neighbor_x][neighbor_y].velocity =
+      vec3(dirs[randomDir].x, 0, dirs[randomDir].y) / COLLECTABLE_SPAWN_DELAY;
+    collectables[neighbor_x][neighbor_y].moved = 1;
+    return 1;
+  }
+
+  /// this function handles the spawning and moving of collectables
+  void CollectableStep() {
+    CreateCollectable();
+    
+    // align all collectables
+    for (int x = 0; x < BOARD_SIZE; x++) {
+      for (int y = 0; y < BOARD_SIZE; y++) {
+        if (collectables[x][y].moved != -1) {
+          collectables[x][y].moved = 0;
+          collectables[x][y].velocity = vec3(0, 0, 0);
+          PositionCollectable(&collectables[x][y], x, y);
+        }
+      }
+    }
+    
+    // move collectables randomly
+    for (int x = 0; x < BOARD_SIZE; x++) {
+      for (int y = 0; y < BOARD_SIZE; y++) {
+        if (collectables[x][y].moved == 0) {
+          MoveCollectableRandom(x, y);
+        }
+      }
+    }
   }
 };
 
@@ -312,8 +417,13 @@ int main(int argc, char *argv[]) {
   // set random seed
   srand(time(NULL));
 
-  application->CreateCollectable();
-
+  //application->CollectableStep();
+  // for (int x = 0; x < BOARD_SIZE; x++) {
+  //   for (int y = 0; y < BOARD_SIZE; y++) {
+  //     application->collectables[x][y] = Collectable();
+  //   }
+  // }
+  
   // set current time initially
   auto lastTime = std::chrono::high_resolution_clock::now();
 
@@ -334,9 +444,9 @@ int main(int argc, char *argv[]) {
 
     // handle collectables
     timeSinceLastCollectable += deltaTime;
-    if (timeSinceLastCollectable > 1.0f) {
+    if (timeSinceLastCollectable > COLLECTABLE_SPAWN_DELAY) {
       timeSinceLastCollectable = 0.0f;
-      application->CreateCollectable();
+      application->CollectableStep();
     }
 
     // Render scene.
