@@ -84,10 +84,6 @@ public:
     if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
-    // rotate for debuging
-    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-      player.rotation.y += PI / 16;
-    }
     vec3 playerVelocity = vec3(0, 0, 0);
     if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
       playerVelocity.z -= PLAYER_SPEED;
@@ -142,29 +138,31 @@ public:
   }
 
   void initGeom(const std::string &resourceDirectory) {
-    // EXAMPLE new set up to read one shape from one obj file - convert to read
-    // several
-    // Initialize mesh
-    // Load geometry
-    // Some obj files contain material information.We'll ignore them for this
-    // assignment.
+    // // load obj file for collectable
     // vector<tinyobj::shape_t> TOshapes;
     // vector<tinyobj::material_t> objMaterials;
     // string errStr;
     // // load in the mesh and make the shape(s)
     // bool rc =
     //     tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-    //                      (resourceDirectory + "/SmoothSphere.obj").c_str());
+    //                      (resourceDirectory + "/MONARCH.OBJ").c_str());
     // if (!rc) {
     //   cerr << errStr << endl;
     // } else {
-    //   collectable = make_shared<Shape>();
-    //   collectable->createShape(TOshapes[0]);
-    //   collectable->measure();
-    //   collectable->init();
+    //   collectableMesh = make_shared<Shape>();
+    //   collectableMesh->createShape(TOshapes[0]);
+    //   collectableMesh->measure();
+    //   collectableMesh->init();
     // }
-    // gMin.x = collectable->min.x;
-    // gMin.y = collectable->min.y;
+    // gMin.x = collectableMesh->min.x;
+    // gMin.y = collectableMesh->min.y;
+
+    // create mesh for collectable
+    collectableMesh = make_shared<Shape>();
+    ;
+    collectableMesh->createShape(0);
+    collectableMesh->measure();
+    collectableMesh->init();
 
     // ground mesh and gameobject
     groundPlane = make_shared<Shape>();
@@ -185,16 +183,26 @@ public:
     player = GameObject(playerMesh, vec3(0, 0, -6), vec3(0, PI / 4, 0),
                         vec3(0.5f, 0.7f, 0.3f), vec3(0, 0, 0));
     renderObjects.push_back(&player);
-
-    // collectable mesh only
-    collectableMesh = make_shared<Shape>();
-    collectableMesh->createShape(0);
-    collectableMesh->measure();
-    collectableMesh->init();
   }
 
-  void renderObject(GameObject* renderbject, float deltaTime) {
-    
+  void renderGameObject(shared_ptr<MatrixStack> Projection,
+                    shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Model,
+                    GameObject* renderObject, float deltaTime) { 
+    Model->pushMatrix();
+    Model->loadIdentity();
+    renderObject->position =
+      renderObject->position + (renderObject->velocity * deltaTime);
+    Model->translate(renderObject->position);
+    Model->rotate(renderObject->rotation.x, vec3(1, 0, 0));
+    Model->rotate(renderObject->rotation.z, vec3(0, 0, 1));
+    Model->rotate(renderObject->rotation.y, vec3(0, 1, 0));
+    Model->pushMatrix();
+    Model->scale(renderObject->scale);
+    glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE,
+                       value_ptr(Model->topMatrix()));
+    renderObject->mesh->draw(prog);
+    Model->popMatrix();
+    Model->popMatrix();
   }
 
   void render(float deltaTime) {
@@ -216,7 +224,6 @@ public:
 
     // Apply perspective projection.
     Projection->pushMatrix();
-    // Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
     Projection->perspective(0.45f, aspect, 0.01f, 100.0f);
 
     // View is identity - for now
@@ -231,69 +238,25 @@ public:
     glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE,
                        value_ptr(View->topMatrix()));
 
+    // render gameobjects in renderObjects
     for (unsigned int i = 0; i < renderObjects.size(); i++) {
       GameObject *renderObject = renderObjects[i];
-      Model->pushMatrix();
-      Model->loadIdentity();
-      renderObject->position =
-          renderObject->position + (renderObject->velocity * deltaTime);
-      Model->translate(renderObject->position);
-      Model->rotate(renderObject->rotation.x, vec3(1, 0, 0));
-      Model->rotate(renderObject->rotation.z, vec3(0, 0, 1));
-      Model->rotate(renderObject->rotation.y, vec3(0, 1, 0));
-      Model->pushMatrix();
-      Model->scale(renderObject->scale);
-      glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE,
-                         value_ptr(Model->topMatrix()));
-      renderObject->mesh->draw(prog);
-      Model->popMatrix();
-      Model->popMatrix();
+      renderGameObject(Projection, View, Model, renderObject, deltaTime);
     }
 
-    // copy and pasted render object for collectables
-    // sloppy should be function to avoid duplicated code
+    // render collectables seperately to avoid render calls on empty spaces
     for (int x = 0; x < BOARD_SIZE; x++) {
       for (int y = 0; y < BOARD_SIZE; y++) {
         Collectable *renderObject = &collectables[x][y];
         if (renderObject->moved == -1) {
           continue;
         }
-        Model->pushMatrix();
-        Model->loadIdentity();
-        renderObject->position =
-          renderObject->position + (renderObject->velocity * deltaTime);
-        Model->translate(renderObject->position);
-        Model->rotate(renderObject->rotation.x, vec3(1, 0, 0));
-        Model->rotate(renderObject->rotation.z, vec3(0, 0, 1));
-        Model->rotate(renderObject->rotation.y, vec3(0, 1, 0));
-        Model->pushMatrix();
-        Model->scale(renderObject->scale);
-        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE,
-                           value_ptr(Model->topMatrix()));
-        renderObject->mesh->draw(prog);
-        Model->popMatrix();
-        Model->popMatrix();
+        renderGameObject(Projection, View, Model, renderObject, deltaTime);
       }
     }
 
-    // // draw mesh
-    // Model->pushMatrix();
-    // Model->loadIdentity();
-    // //"global" translate
-    // Model->translate(vec3(0, 0, -6));
-    // cube_rot_y += PI/4*deltaTime;
-    // Model->rotate(cube_rot_y, vec3(0, 1, 0));
-    // Model->rotate(PI/8, vec3(1, 0, 0));
-    // Model->pushMatrix();
-    // Model->scale(vec3(0.5, 0.5, 0.5));
-    // glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE,
-    // value_ptr(Model->topMatrix())); collectable->draw(prog);
-    // Model->popMatrix();
-    // Model->popMatrix();
-
+    // clean up
     prog->unbind();
-
-    // Pop matrix stacks.
     Projection->popMatrix();
     View->popMatrix();
   }
@@ -306,14 +269,14 @@ public:
     int z = rand() % BOARD_SIZE;
     collectables[x][z] =
         Collectable(collectableMesh, vec3(0, 0, 0), vec3(0, -PI / 8, 0),
-                    vec3(0.25f, 0.25f, 0.25f), vec3(0, 0, 0));
+                    vec3(0.15f, 0.15f, 0.25f), vec3(0, 0, 0));
     // renderObjects.push_back(&collectables[x][z]);
     PositionCollectable(&collectables[x][z], x, z);
   }
 
   void PositionCollectable(Collectable *collectable, int x, int z) {
     collectable->position =
-        vec3(x - BOARD_SIZE / 2 + 0.5f, 0, z - 6 - BOARD_SIZE / 2 + 0.5f);
+        vec3(x - BOARD_SIZE / 2 + 0.5f, 0.5f, z - 6 - BOARD_SIZE / 2 + 0.5f);
   }
 
   /// only used once, but made a function to break out of double loop
@@ -321,18 +284,19 @@ public:
   int MoveCollectableRandom(int x, int y) {
     // keep track of wich directions we have checked
     int dirsFree[] = {1, 1, 1, 1};
-    const vec2 dirs[] = {vec2(-1, 0), vec2(1, 0), vec2(0, -1),
-                         vec2(0, 1)};
+    const vec2 dirs[] = {vec2(-1, 0), vec2(0, 1), vec2(1, 0), vec2(0, -1)};
     if (x == 0) {
       dirsFree[0] = 0;
     } else if (x == BOARD_SIZE - 1) {
-      dirsFree[1] = 0;
+      dirsFree[2] = 0;
     }
     if (y == 0) {
-      dirsFree[2] = 0;
-    } else if (y == BOARD_SIZE - 1) {
       dirsFree[3] = 0;
+    } else if (y == BOARD_SIZE - 1) {
+      dirsFree[1] = 0;
     }
+
+    // keep finding directions untill exhausted all options
     int randomDir = -1;
     int neighbor_x = -1;
     int neighbor_y = -1;
@@ -351,15 +315,18 @@ public:
         break;
       }
     }
+    // no directions available
     if (randomDir == -1) {
       return 0;
     }
-    // swap the empty adjacent cell with this one that is moving there
+    
+    // swap cell with adjacent
     Collectable temp = collectables[x][y];
     collectables[x][y] = collectables[neighbor_x][neighbor_y];
     collectables[neighbor_x][neighbor_y] = temp;
     collectables[neighbor_x][neighbor_y].velocity =
-      vec3(dirs[randomDir].x, 0, dirs[randomDir].y) / COLLECTABLE_SPAWN_DELAY;
+        vec3(dirs[randomDir].x, 0, dirs[randomDir].y) / COLLECTABLE_SPAWN_DELAY;
+    collectables[neighbor_x][neighbor_y].rotation.y = randomDir * PI/2 + 9*PI/16;
     collectables[neighbor_x][neighbor_y].moved = 1;
     return 1;
   }
@@ -367,7 +334,7 @@ public:
   /// this function handles the spawning and moving of collectables
   void CollectableStep() {
     CreateCollectable();
-    
+
     // align all collectables
     for (int x = 0; x < BOARD_SIZE; x++) {
       for (int y = 0; y < BOARD_SIZE; y++) {
@@ -378,7 +345,7 @@ public:
         }
       }
     }
-    
+
     // move collectables randomly
     for (int x = 0; x < BOARD_SIZE; x++) {
       for (int y = 0; y < BOARD_SIZE; y++) {
@@ -391,7 +358,6 @@ public:
 };
 
 int main(int argc, char *argv[]) {
-  // Where the resources are loaded from
   std::string resourceDir = "../resources";
 
   if (argc >= 2) {
@@ -399,9 +365,6 @@ int main(int argc, char *argv[]) {
   }
 
   Application *application = new Application();
-
-  // Your main will always include a similar set up to establish your window
-  // and GL context, etc.
 
   WindowManager *windowManager = new WindowManager();
   windowManager->init(640, 480);
@@ -417,16 +380,8 @@ int main(int argc, char *argv[]) {
   // set random seed
   srand(time(NULL));
 
-  //application->CollectableStep();
-  // for (int x = 0; x < BOARD_SIZE; x++) {
-  //   for (int y = 0; y < BOARD_SIZE; y++) {
-  //     application->collectables[x][y] = Collectable();
-  //   }
-  // }
-  
-  // set current time initially
+  // setup timers
   auto lastTime = std::chrono::high_resolution_clock::now();
-
   float timeSinceLastCollectable = 0;
 
   // Loop until the user closes the window.
