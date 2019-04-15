@@ -8,15 +8,16 @@
 class GameObject {
 
 public:
-  /* GameObject(const GameObject& gameObject); */
   GameObject();
   GameObject(std::shared_ptr<Shape> mesh, glm::vec3 position,
-             glm::vec3 rotation, glm::vec3 scale, glm::vec3 velocity);
+             glm::vec3 rotation, glm::vec3 scale, glm::vec3 velocity,
+             glm::vec3 extent);
   std::shared_ptr<Shape> mesh;
   glm::vec3 position;
   glm::vec3 rotation;
   glm::vec3 scale;
   glm::vec3 velocity;
+  glm::vec3 extent; // for bbox
 };
 
 #endif // __GAMEOBJECT_H_

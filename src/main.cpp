@@ -51,7 +51,6 @@ public:
   // pointers to objects in the scene
   vector<GameObject *> renderObjects;
 
-  // the object that the player controls
   GameObject player;
 
   // for each board space, objects player collects
@@ -59,6 +58,8 @@ public:
   int collectablesCount = 0;
 
   GameObject ground;
+
+  int score = 0;
 
   // Contains vertex information for OpenGL
   GLuint VertexArrayID;
@@ -172,7 +173,7 @@ public:
     ground = GameObject(
         groundPlane, vec3(0, 0, -6), vec3(0, 0, 0),
         vec3(0.5f * BOARD_SIZE, 0.5f * BOARD_SIZE, 0.5f * BOARD_SIZE),
-        vec3(0, 0, 0));
+        vec3(0, 0, 0), vec3(0, 0, 0));
     renderObjects.push_back(&ground);
 
     // player mesh and gameobject
@@ -181,17 +182,19 @@ public:
     playerMesh->measure();
     playerMesh->init();
     player = GameObject(playerMesh, vec3(0, 0, -6), vec3(0, PI / 4, 0),
-                        vec3(0.5f, 0.7f, 0.3f), vec3(0, 0, 0));
+                        vec3(0.5f, 0.7f, 0.3f), vec3(0, 0, 0),
+                        vec3(0.5f, 0.5f, 0.5f));
     renderObjects.push_back(&player);
   }
 
   void renderGameObject(shared_ptr<MatrixStack> Projection,
-                    shared_ptr<MatrixStack> View, shared_ptr<MatrixStack> Model,
-                    GameObject* renderObject, float deltaTime) { 
+                        shared_ptr<MatrixStack> View,
+                        shared_ptr<MatrixStack> Model, GameObject *renderObject,
+                        float deltaTime) {
     Model->pushMatrix();
     Model->loadIdentity();
     renderObject->position =
-      renderObject->position + (renderObject->velocity * deltaTime);
+        renderObject->position + (renderObject->velocity * deltaTime);
     Model->translate(renderObject->position);
     Model->rotate(renderObject->rotation.x, vec3(1, 0, 0));
     Model->rotate(renderObject->rotation.z, vec3(0, 0, 1));
@@ -267,9 +270,9 @@ public:
     }
     int x = rand() % BOARD_SIZE;
     int z = rand() % BOARD_SIZE;
-    collectables[x][z] =
-        Collectable(collectableMesh, vec3(0, 0, 0), vec3(0, -PI / 8, 0),
-                    vec3(0.15f, 0.15f, 0.25f), vec3(0, 0, 0));
+    collectables[x][z] = Collectable(
+        collectableMesh, vec3(0, 0, 0), vec3(0, -PI / 8, 0),
+        vec3(0.15f, 0.15f, 0.25f), vec3(0, 0, 0), vec3(0.5f, 0.5f, 0.5f));
     // renderObjects.push_back(&collectables[x][z]);
     PositionCollectable(&collectables[x][z], x, z);
   }
@@ -319,14 +322,15 @@ public:
     if (randomDir == -1) {
       return 0;
     }
-    
+
     // swap cell with adjacent
     Collectable temp = collectables[x][y];
     collectables[x][y] = collectables[neighbor_x][neighbor_y];
     collectables[neighbor_x][neighbor_y] = temp;
     collectables[neighbor_x][neighbor_y].velocity =
         vec3(dirs[randomDir].x, 0, dirs[randomDir].y) / COLLECTABLE_SPAWN_DELAY;
-    collectables[neighbor_x][neighbor_y].rotation.y = randomDir * PI/2 + 9*PI/16;
+    collectables[neighbor_x][neighbor_y].rotation.y =
+        randomDir * PI / 2 + 9 * PI / 16;
     collectables[neighbor_x][neighbor_y].moved = 1;
     return 1;
   }
@@ -351,6 +355,43 @@ public:
       for (int y = 0; y < BOARD_SIZE; y++) {
         if (collectables[x][y].moved == 0) {
           MoveCollectableRandom(x, y);
+        }
+      }
+    }
+  }
+
+  /// for each collectable, check if its extent is within the player's extent
+  void CheckCollisions() {
+    vec3 playerStart = player.position - player.extent;
+    vec3 playerEnd = player.position + player.extent;
+    for (int x = 0; x < BOARD_SIZE; x++) {
+      for (int y = 0; y < BOARD_SIZE; y++) {
+        if (collectables[x][y].moved != -1) {
+          vec3 colStart =
+              collectables[x][y].position - collectables[x][y].extent;
+          vec3 colEnd = collectables[x][y].position + collectables[x][y].extent;
+          if (colStart.x > playerEnd.x) {
+            continue;
+          }
+          if (colEnd.x < playerStart.x) {
+            continue;
+          }
+          if (colStart.y > playerEnd.y) {
+            continue;
+          }
+          if (colEnd.y < playerStart.y) {
+            continue;
+          }
+          if (colStart.z > playerEnd.z) {
+            continue;
+          }
+          if (colEnd.z < playerStart.z) {
+            continue;
+          }
+          collectables[x][y].moved = -1;
+          collectables[x][y].velocity = vec3(0, 0, 0);
+          score += 100;
+          printf("Hit! Your score is %i\n", score);
         }
       }
     }
@@ -403,6 +444,7 @@ int main(int argc, char *argv[]) {
       timeSinceLastCollectable = 0.0f;
       application->CollectableStep();
     }
+    application->CheckCollisions();
 
     // Render scene.
     application->render(deltaTime);
