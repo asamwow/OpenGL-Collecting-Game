@@ -19,3 +19,5 @@ Build instructions:
         $ cmake ..
         $ make
         run with argument ../../resources if it complains about not finding resources
+    Windows:
+        ¯\_(ツ)_/¯
