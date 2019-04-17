@@ -22,8 +22,12 @@
 #include <tiny_obj_loader/tiny_obj_loader.h>
 
 // value_ptr for glm
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+//#include <glm/gtc/matrix_transform.hpp>
+//#include <glm/gtc/type_ptr.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
+
+#include "Camera.h"
 
 using namespace std;
 using namespace glm;
@@ -39,6 +43,7 @@ class Application : public EventCallbacks {
 
 public:
   WindowManager *windowManager = nullptr;
+  Camera playerView; 
 
   // Our shader program
   std::shared_ptr<Program> prog;
@@ -160,7 +165,6 @@ public:
 
     // create mesh for collectable
     collectableMesh = make_shared<Shape>();
-    ;
     collectableMesh->createShape(0);
     collectableMesh->measure();
     collectableMesh->init();

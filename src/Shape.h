@@ -5,7 +5,8 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <glm/gtc/type_ptr.hpp>
+//#include <glm/gtc/type_ptr.hpp>
+#include <gtc/type_ptr.hpp>
 #include <tiny_obj_loader/tiny_obj_loader.h>
 
 class Program;

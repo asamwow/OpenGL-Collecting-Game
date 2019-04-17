@@ -6,10 +6,14 @@
 #include <stack>
 #include <memory>
 
-#include "glm/glm.hpp"
-#include "glm/vec4.hpp"
-#include "glm/mat4x4.hpp"
-#include "glm/gtc/matrix_transform.hpp"
+//#include "glm/glm.hpp"
+//#include "glm/vec4.hpp"
+//#include "glm/mat4x4.hpp"
+//#include "glm/gtc/matrix_transform.hpp"
+#include "glm.hpp"
+#include "vec4.hpp"
+#include "mat4x4.hpp"
+#include "gtc/matrix_transform.hpp"
 
 
 class MatrixStack
