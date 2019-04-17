@@ -36,4 +36,4 @@ Build instructions:
 
     Windows:
 
-        ¯\\_(ツ)_/¯
+        ¯\_(ツ)_/¯
