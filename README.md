@@ -5,12 +5,10 @@ Build instructions:
 
     Linux: 
 
-        $ cp CMakeLists-linux.txt CMakeLists.txt
-            Edit source files to add in GLM prefixes to 
-            the include statements
+        Perform the following step if it does not build with the default
+        CMakelists.txt (CMakeLists-Mac.txt)
 
-            TODO: conditional includes to prevent needing
-            this step
+        $ cp CMakeLists-linux.txt CMakeLists.txt
 
         $ mkdir build
 
@@ -18,11 +16,14 @@ Build instructions:
 
         $ cmake ..
 
-        $ make
+        $ make [-jN]
 
     Mac OSX:
 
-        $ cp CMakeLists-mac.txt CMakeLists.txt
+        Perform the following step if, for some reason, the CMakeLists.txt file
+        has been replaced by the linux version. 
+
+        $ cp CMakeLists-Mac.txt CMakeLists.txt
 
         $ mkdir build
 
@@ -30,9 +31,9 @@ Build instructions:
 
         $ cmake ..
 
-        $ make
+        $ make [-jN]
 
-        run with argument ../../resources if it complains about not finding resources
+    run with argument ../../resources if it complains about not finding resources
 
     Windows:
 
