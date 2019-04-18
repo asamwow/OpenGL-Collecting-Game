@@ -548,10 +548,26 @@ public:
           collectables[x][y].velocity = vec3(0, 0, 0);
           if (collectables[x][y].moved != 2)
           {
-            score += 100;
+            score += 1;
             collectables[x][y].moved = 2;
             collectables[x][y].collected = 1;
-            printf("Hit! Your score is %i\n", score);
+            printf("Hit! You have collected %i\n", score);
+            // count remaining collectables left
+            int collectablesRemaining = 0;
+            for (int xCheck = 0; xCheck < BOARD_SIZE; xCheck++)
+            {
+              for (int yCheck = 0; yCheck < BOARD_SIZE; yCheck++)
+              {
+                if (collectables[xCheck][yCheck].moved == 0 ||
+                    collectables[xCheck][yCheck].moved == 1) {
+                  collectablesRemaining++;
+                }
+              }
+            }
+            printf("There are %i bunny(s) left in the room!\n", collectablesRemaining);
+            // if (collectablesRemaining == 0 && "no more collectblse will spawn") {
+            //   printf("Good job!!!");
+            // }
           }
         }
       }
