@@ -494,9 +494,28 @@ public:
   /// for each collectable, check if its extent is within the player's extent
   void CheckCollisions()
   {
+    // keep player on the plane
+#define planeHalfLength 5
+    if (playerView.position.x > BOARD_SIZE/2) {
+      playerView.position.x = BOARD_SIZE/2;
+    }
+    if (playerView.position.x < -BOARD_SIZE/2) {
+      playerView.position.x = -BOARD_SIZE/2;
+    }
+    if (playerView.position.z > BOARD_SIZE) {
+      playerView.position.z = BOARD_SIZE;
+    }
+    if (playerView.position.z < 0) {
+      playerView.position.z = 0;
+    }
+    printf("x:%f z:%f\n", playerView.position.x, playerView.position.z);
+    
     //vec3 playerStart = player.position - player.extent;
     //vec3 playerEnd = player.position + player.extent;
     player.position = -playerView.position;
+
+
+    
     vec3 playerStart = player.position - player.extent;
     vec3 playerEnd = player.position + player.extent;
     for (int x = 0; x < BOARD_SIZE; x++)
