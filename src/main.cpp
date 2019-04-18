@@ -218,9 +218,12 @@ public:
     bool rc =
         tinyobj::LoadObj(TOshapes, objMaterials, errStr,
                          (resourceDirectory + "/bunny.obj").c_str());
-    if (!rc) {
+    if (!rc)
+    {
       cerr << errStr << endl;
-    } else {
+    }
+    else
+    {
       collectableMesh = make_shared<Shape>();
       collectableMesh->createShape(TOshapes[0]);
       collectableMesh->measure();
@@ -230,11 +233,11 @@ public:
     gMin.y = collectableMesh->min.y;
 
     // create mesh for collectable
-   // collectableMesh = make_shared<Shape>();
-   // collectableMesh->createShape(0);
-   // collectableMesh->measure();
-   // collectableMesh->init();
-   
+    // collectableMesh = make_shared<Shape>();
+    // collectableMesh->createShape(0);
+    // collectableMesh->measure();
+    // collectableMesh->init();
+
     // ground mesh and gameobject
     groundPlane = make_shared<Shape>();
     groundPlane->createShape(1);
@@ -441,9 +444,15 @@ public:
       {
         if (collectables[x][y].moved != -1)
         {
-          collectables[x][y].moved = 0;
-          collectables[x][y].velocity = vec3(0, 0, 0);
-          PositionCollectable(&collectables[x][y], x, y);
+          if (collectables[x][y].moved == 2)
+          {
+            collectables[x][y].velocity = vec3(0, 0, 0);
+          }
+          else
+          {
+            collectables[x][y].moved = 0;
+            PositionCollectable(&collectables[x][y], x, y);
+          }
         }
       }
     }
@@ -503,10 +512,10 @@ public:
             continue;
           }
           collectables[x][y].velocity = vec3(0, 0, 0);
-          if(collectables[x][y].moved != 2)
+          if (collectables[x][y].moved != 2)
           {
             score += 100;
-            collectables[x][y].moved = 2;          
+            collectables[x][y].moved = 2;
             printf("Hit! Your score is %i\n", score);
           }
         }
