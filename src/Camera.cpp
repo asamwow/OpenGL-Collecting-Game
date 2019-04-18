@@ -44,7 +44,7 @@ glm::mat4 Camera::process(double frametime, int mousex, int mousey,
 
     dir = dir * Rx * Ry;
     
-    glm::vec3 lateralDir = glm::vec3(glm::vec4(0,lateralSpeed, 0, 1) * 
+    glm::vec3 lateralDir = glm::vec3(glm::vec4(0,0, lateralSpeed, 1) * 
                 glm::rotate(glm::mat4(1), 3.14159f / 2.0f, glm::vec3(0,1,0))
                            *Ry);
     targetPos += lateralDir;
