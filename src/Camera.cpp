@@ -1,29 +1,34 @@
 #include "Camera.h"
-#include <stdio.h>
 #define MAXDEPTH -0.5
 #define MINDEPTH -20
 
-glm::mat4 Camera::process(double frametime)
+glm::mat4 Camera::process(double frametime, int mousex, int mousey,
+                            int width, int height)
 {
     float speed = 0;
-    float yangle = 0;
-    float xangle = 0;
+    float yawAngle = 0;
+    float pitchAngle = 0;
+    float lookSensitivity = 0.08;
 
     if (w == 1)
         speed = 5 * frametime;
     else if (s == 1)
         speed = -5 * frametime;
-    if (a == 1)
-        yangle = -2 * frametime;
-    else if (d == 1)
-        yangle = 2 * frametime;
-    if (r == 1 && targetPitch.x > -3.14159 / 2.0)
-        xangle = -2 * frametime;
-    else if (f == 1 && targetPitch.x < 3.14159 / 2.0)
-        xangle = 2 * frametime;
 
-    targetYaw.y += yangle; 
-    targetPitch.x += xangle;
+    if ((height - 4.0 * mousey) < 0 && targetPitch.x < 3.14159 / 2.0)
+        pitchAngle += lookSensitivity * frametime * (height - 4.0 * mousey);
+    else if ((height - 4.0 * mousey) > 0 && targetPitch.x > -3.14159 / 2.0)
+        pitchAngle += lookSensitivity * frametime * (height - 4.0 * mousey);
+
+    yawAngle = lookSensitivity * frametime * (width - 4.0 * mousex);
+   
+    targetYaw.y -= yawAngle; 
+    targetPitch.x -= pitchAngle;
+
+    if(targetPitch.x < -3.14159 / 2.0)
+        targetPitch.x = -3.14159 / 2.0;
+    else if(targetPitch.x > 3.14159 / 2.0)
+        targetPitch.x = 3.14159 / 2.0;
 
     yaw += -0.1f * yaw + 0.1f * targetYaw;
     pitch += -0.1f * pitch + 0.1f * targetPitch;

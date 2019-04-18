@@ -73,7 +73,6 @@ public:
   GameObject ground;
 
   int score = 0;
-
   float colorTime = 0;
 
   // Contains vertex information for OpenGL
@@ -202,6 +201,10 @@ public:
     // Enable z-buffer test.
     glEnable(GL_DEPTH_TEST);
 
+    glfwSetInputMode(windowManager->getHandle(), 
+                      GLFW_CURSOR,
+                      GLFW_CURSOR_DISABLED);
+
     // Initialize the GLSL program.
     prog = make_shared<Program>();
     prog->setVerbose(true);
@@ -299,8 +302,11 @@ public:
     player.position = playerView.position;
     // Get current frame buffer size.
     int width, height;
+    double mousex, mousey;
     glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
     glViewport(0, 0, width, height);
+
+    glfwGetCursorPos(windowManager->getHandle(), &mousex, &mousey);
 
     // Clear framebuffer.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -321,7 +327,8 @@ public:
     View->pushMatrix();
     //View->translate(vec3(0, -3, -16));
     //View->rotate(PI / 4, vec3(1, 0, 0));
-    View->multMatrix(playerView.process(deltaTime));
+    View->multMatrix(playerView.process(deltaTime, mousex, mousey, width, height));
+    glfwSetCursorPos(windowManager->getHandle(), width / 4.0, height / 4.0);
 
     // Draw a stack of cubes with indiviudal transforms
     prog->bind();
