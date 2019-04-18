@@ -39,11 +39,11 @@ using namespace glm;
 #define PLAYER_SPEED 2.0f
 #define COLLECTABLE_SPAWN_DELAY 0.5f
 
-class Application : public EventCallbacks {
+class Application : public EventCallbacks
+{
 
 public:
   WindowManager *windowManager = nullptr;
-  Camera playerView; 
 
   // Our shader program
   std::shared_ptr<Program> prog;
@@ -57,6 +57,7 @@ public:
   vector<GameObject *> renderObjects;
 
   GameObject player;
+  Camera playerView;
 
   // for each board space, objects player collects
   Collectable collectables[BOARD_SIZE][BOARD_SIZE];
@@ -80,49 +81,111 @@ public:
   vec3 gMin;
 
   void keyCallback(GLFWwindow *window, int key, int scancode, int action,
-                   int mods) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+                   int mods)
+  {
+    if (key == GLFW_KEY_W && action == GLFW_PRESS)
+    {
+      playerView.w = 1;
+    }
+    if (key == GLFW_KEY_W && action == GLFW_RELEASE)
+    {
+      playerView.w = 0;
+    }
+    if (key == GLFW_KEY_S && action == GLFW_PRESS)
+    {
+      playerView.s = 1;
+    }
+    if (key == GLFW_KEY_S && action == GLFW_RELEASE)
+    {
+      playerView.s = 0;
+    }
+    if (key == GLFW_KEY_A && action == GLFW_PRESS)
+    {
+      playerView.a = 1;
+    }
+    if (key == GLFW_KEY_A && action == GLFW_RELEASE)
+    {
+      playerView.a = 0;
+    }
+    if (key == GLFW_KEY_D && action == GLFW_PRESS)
+    {
+      playerView.d = 1;
+    }
+    if (key == GLFW_KEY_D && action == GLFW_RELEASE)
+    {
+      playerView.d = 0;
+    }
+    if (key == GLFW_KEY_R && action == GLFW_PRESS)
+    {
+      playerView.r = 1;
+    }
+    if (key == GLFW_KEY_R && action == GLFW_RELEASE)
+    {
+      playerView.r = 0;
+    }
+    if (key == GLFW_KEY_F && action == GLFW_PRESS)
+    {
+      playerView.f = 1;
+    }
+    if (key == GLFW_KEY_F && action == GLFW_RELEASE)
+    {
+      playerView.f = 0;
+    }
+
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
       glfwSetWindowShouldClose(window, GL_TRUE);
     }
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
+    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
-    if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
+    if (key == GLFW_KEY_Z && action == GLFW_RELEASE)
+    {
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     vec3 playerVelocity = vec3(0, 0, 0);
-    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT))
+    {
       playerVelocity.z -= PLAYER_SPEED;
     }
     if (key == GLFW_KEY_DOWN &&
-        (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        (action == GLFW_PRESS || action == GLFW_REPEAT))
+    {
       playerVelocity.z += PLAYER_SPEED;
     }
     if (key == GLFW_KEY_RIGHT &&
-        (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        (action == GLFW_PRESS || action == GLFW_REPEAT))
+    {
       playerVelocity.x += PLAYER_SPEED;
     }
     if (key == GLFW_KEY_LEFT &&
-        (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        (action == GLFW_PRESS || action == GLFW_REPEAT))
+    {
       playerVelocity.x -= PLAYER_SPEED;
     }
     player.velocity = playerVelocity;
   }
 
-  void mouseCallback(GLFWwindow *window, int button, int action, int mods) {
+  void
+  mouseCallback(GLFWwindow *window, int button, int action, int mods)
+  {
     double posX, posY;
 
-    if (action == GLFW_PRESS) {
+    if (action == GLFW_PRESS)
+    {
       glfwGetCursorPos(window, &posX, &posY);
       cout << "Pos X " << posX << " Pos Y " << posY << endl;
     }
   }
 
-  void resizeCallback(GLFWwindow *window, int width, int height) {
+  void resizeCallback(GLFWwindow *window, int width, int height)
+  {
     glViewport(0, 0, width, height);
   }
 
-  void init(const std::string &resourceDirectory) {
+  void init(const std::string &resourceDirectory)
+  {
     GLSL::checkVersion();
 
     // Set background color.
@@ -143,7 +206,8 @@ public:
     prog->addAttribute("vertNor");
   }
 
-  void initGeom(const std::string &resourceDirectory) {
+  void initGeom(const std::string &resourceDirectory)
+  {
     // // load obj file for collectable
     // vector<tinyobj::shape_t> TOshapes;
     // vector<tinyobj::material_t> objMaterials;
@@ -194,7 +258,8 @@ public:
   void renderGameObject(shared_ptr<MatrixStack> Projection,
                         shared_ptr<MatrixStack> View,
                         shared_ptr<MatrixStack> Model, GameObject *renderObject,
-                        float deltaTime) {
+                        float deltaTime)
+  {
     Model->pushMatrix();
     Model->loadIdentity();
     renderObject->position =
@@ -212,7 +277,8 @@ public:
     Model->popMatrix();
   }
 
-  void render(float deltaTime) {
+  void render(float deltaTime)
+  {
     // Get current frame buffer size.
     int width, height;
     glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -235,8 +301,9 @@ public:
 
     // View is identity - for now
     View->pushMatrix();
-    View->translate(vec3(0, -3, -16));
-    View->rotate(PI / 4, vec3(1, 0, 0));
+    //View->translate(vec3(0, -3, -16));
+    //View->rotate(PI / 4, vec3(1, 0, 0));
+    View->multMatrix(playerView.process(deltaTime));
 
     // Draw a stack of cubes with indiviudal transforms
     prog->bind();
@@ -246,16 +313,20 @@ public:
                        value_ptr(View->topMatrix()));
 
     // render gameobjects in renderObjects
-    for (unsigned int i = 0; i < renderObjects.size(); i++) {
+    for (unsigned int i = 0; i < renderObjects.size(); i++)
+    {
       GameObject *renderObject = renderObjects[i];
       renderGameObject(Projection, View, Model, renderObject, deltaTime);
     }
 
     // render collectables seperately to avoid render calls on empty spaces
-    for (int x = 0; x < BOARD_SIZE; x++) {
-      for (int y = 0; y < BOARD_SIZE; y++) {
+    for (int x = 0; x < BOARD_SIZE; x++)
+    {
+      for (int y = 0; y < BOARD_SIZE; y++)
+      {
         Collectable *renderObject = &collectables[x][y];
-        if (renderObject->moved == -1) {
+        if (renderObject->moved == -1)
+        {
           continue;
         }
         renderGameObject(Projection, View, Model, renderObject, deltaTime);
@@ -268,8 +339,10 @@ public:
     View->popMatrix();
   }
 
-  void CreateCollectable() {
-    if (collectablesCount >= BOARD_SIZE * BOARD_SIZE) {
+  void CreateCollectable()
+  {
+    if (collectablesCount >= BOARD_SIZE * BOARD_SIZE)
+    {
       return;
     }
     int x = rand() % BOARD_SIZE;
@@ -281,25 +354,33 @@ public:
     PositionCollectable(&collectables[x][z], x, z);
   }
 
-  void PositionCollectable(Collectable *collectable, int x, int z) {
+  void PositionCollectable(Collectable *collectable, int x, int z)
+  {
     collectable->position =
         vec3(x - BOARD_SIZE / 2 + 0.5f, 0.5f, z - 6 - BOARD_SIZE / 2 + 0.5f);
   }
 
   /// only used once, but made a function to break out of double loop
   /// returns false if no path available
-  int MoveCollectableRandom(int x, int y) {
+  int MoveCollectableRandom(int x, int y)
+  {
     // keep track of wich directions we have checked
     int dirsFree[] = {1, 1, 1, 1};
     const vec2 dirs[] = {vec2(-1, 0), vec2(0, 1), vec2(1, 0), vec2(0, -1)};
-    if (x == 0) {
+    if (x == 0)
+    {
       dirsFree[0] = 0;
-    } else if (x == BOARD_SIZE - 1) {
+    }
+    else if (x == BOARD_SIZE - 1)
+    {
       dirsFree[2] = 0;
     }
-    if (y == 0) {
+    if (y == 0)
+    {
       dirsFree[3] = 0;
-    } else if (y == BOARD_SIZE - 1) {
+    }
+    else if (y == BOARD_SIZE - 1)
+    {
       dirsFree[1] = 0;
     }
 
@@ -308,22 +389,28 @@ public:
     int neighbor_x = -1;
     int neighbor_y = -1;
     while (dirsFree[0] != 0 || dirsFree[1] != 0 || dirsFree[2] != 0 ||
-           dirsFree[3] != 0) {
+           dirsFree[3] != 0)
+    {
       int randomCheck;
-      do {
+      do
+      {
         randomCheck = rand() % 4;
       } while (dirsFree[randomCheck] == 0);
       neighbor_x = x + dirs[randomCheck].x;
       neighbor_y = y + dirs[randomCheck].y;
-      if (collectables[neighbor_x][neighbor_y].moved != -1) {
+      if (collectables[neighbor_x][neighbor_y].moved != -1)
+      {
         dirsFree[randomCheck] = 0;
-      } else {
+      }
+      else
+      {
         randomDir = randomCheck;
         break;
       }
     }
     // no directions available
-    if (randomDir == -1) {
+    if (randomDir == -1)
+    {
       return 0;
     }
 
@@ -340,13 +427,17 @@ public:
   }
 
   /// this function handles the spawning and moving of collectables
-  void CollectableStep() {
+  void CollectableStep()
+  {
     CreateCollectable();
 
     // align all collectables
-    for (int x = 0; x < BOARD_SIZE; x++) {
-      for (int y = 0; y < BOARD_SIZE; y++) {
-        if (collectables[x][y].moved != -1) {
+    for (int x = 0; x < BOARD_SIZE; x++)
+    {
+      for (int y = 0; y < BOARD_SIZE; y++)
+      {
+        if (collectables[x][y].moved != -1)
+        {
           collectables[x][y].moved = 0;
           collectables[x][y].velocity = vec3(0, 0, 0);
           PositionCollectable(&collectables[x][y], x, y);
@@ -355,9 +446,12 @@ public:
     }
 
     // move collectables randomly
-    for (int x = 0; x < BOARD_SIZE; x++) {
-      for (int y = 0; y < BOARD_SIZE; y++) {
-        if (collectables[x][y].moved == 0) {
+    for (int x = 0; x < BOARD_SIZE; x++)
+    {
+      for (int y = 0; y < BOARD_SIZE; y++)
+      {
+        if (collectables[x][y].moved == 0)
+        {
           MoveCollectableRandom(x, y);
         }
       }
@@ -365,31 +459,41 @@ public:
   }
 
   /// for each collectable, check if its extent is within the player's extent
-  void CheckCollisions() {
+  void CheckCollisions()
+  {
     vec3 playerStart = player.position - player.extent;
     vec3 playerEnd = player.position + player.extent;
-    for (int x = 0; x < BOARD_SIZE; x++) {
-      for (int y = 0; y < BOARD_SIZE; y++) {
-        if (collectables[x][y].moved != -1) {
+    for (int x = 0; x < BOARD_SIZE; x++)
+    {
+      for (int y = 0; y < BOARD_SIZE; y++)
+      {
+        if (collectables[x][y].moved != -1)
+        {
           vec3 colStart =
               collectables[x][y].position - collectables[x][y].extent;
           vec3 colEnd = collectables[x][y].position + collectables[x][y].extent;
-          if (colStart.x > playerEnd.x) {
+          if (colStart.x > playerEnd.x)
+          {
             continue;
           }
-          if (colEnd.x < playerStart.x) {
+          if (colEnd.x < playerStart.x)
+          {
             continue;
           }
-          if (colStart.y > playerEnd.y) {
+          if (colStart.y > playerEnd.y)
+          {
             continue;
           }
-          if (colEnd.y < playerStart.y) {
+          if (colEnd.y < playerStart.y)
+          {
             continue;
           }
-          if (colStart.z > playerEnd.z) {
+          if (colStart.z > playerEnd.z)
+          {
             continue;
           }
-          if (colEnd.z < playerStart.z) {
+          if (colEnd.z < playerStart.z)
+          {
             continue;
           }
           collectables[x][y].moved = -1;
@@ -402,10 +506,12 @@ public:
   }
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   std::string resourceDir = "../resources";
 
-  if (argc >= 2) {
+  if (argc >= 2)
+  {
     resourceDir = argv[1];
   }
 
@@ -430,7 +536,8 @@ int main(int argc, char *argv[]) {
   float timeSinceLastCollectable = 0;
 
   // Loop until the user closes the window.
-  while (!glfwWindowShouldClose(windowManager->getHandle())) {
+  while (!glfwWindowShouldClose(windowManager->getHandle()))
+  {
 
     // save current time for next frame
     auto nextLastTime = std::chrono::high_resolution_clock::now();
@@ -444,7 +551,8 @@ int main(int argc, char *argv[]) {
 
     // handle collectables
     timeSinceLastCollectable += deltaTime;
-    if (timeSinceLastCollectable > COLLECTABLE_SPAWN_DELAY) {
+    if (timeSinceLastCollectable > COLLECTABLE_SPAWN_DELAY)
+    {
       timeSinceLastCollectable = 0.0f;
       application->CollectableStep();
     }

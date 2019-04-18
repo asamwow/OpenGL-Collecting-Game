@@ -6,8 +6,8 @@ Build instructions:
     Linux: 
 
         $ cp CMakeLists-linux.txt CMakeLists.txt
-        Edit source files to add in GLM prefixes to 
-        the include statements
+            Edit source files to add in GLM prefixes to 
+            the include statements
 
             TODO: conditional includes to prevent needing
             this step
