@@ -298,6 +298,12 @@ public:
 
   void render(float deltaTime)
   {
+    static int tooManyPrints = 0;
+    tooManyPrints++;
+    if (tooManyPrints % 100 == 0) {
+      cout << "Framerate: " << (int)(1.0/deltaTime) << endl;
+    }
+    
     colorTime += 10* deltaTime;
     player.position = playerView.position;
     // Get current frame buffer size.
