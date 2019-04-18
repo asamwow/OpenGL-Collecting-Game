@@ -393,7 +393,7 @@ public:
   {
     // keep track of wich directions we have checked
     int dirsFree[] = {1, 1, 1, 1};
-    const vec2 dirs[] = {vec2(-1, 0), vec2(0, 1), vec2(1, 0), vec2(0, -1)};
+    const vec2 dirs[] = {vec2(1, 0), vec2(0, 1), vec2(-1, 0), vec2(0, -1)};
     if (x == 0)
     {
       dirsFree[0] = 0;
