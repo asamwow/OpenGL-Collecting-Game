@@ -396,11 +396,11 @@ public:
     const vec2 dirs[] = {vec2(1, 0), vec2(0, 1), vec2(-1, 0), vec2(0, -1)};
     if (x == 0)
     {
-      dirsFree[0] = 0;
+      dirsFree[2] = 0;
     }
     else if (x == BOARD_SIZE - 1)
     {
-      dirsFree[2] = 0;
+      dirsFree[1] = 0;
     }
     if (y == 0)
     {
