@@ -74,6 +74,8 @@ public:
 
   int score = 0;
 
+  float colorTime = 0;
+
   // Contains vertex information for OpenGL
   GLuint VertexArrayID;
 
@@ -209,6 +211,8 @@ public:
     prog->addUniform("P");
     prog->addUniform("V");
     prog->addUniform("M");
+    prog->addUniform("collected");
+    prog->addUniform("colorTime");
     prog->addAttribute("vertPos");
     prog->addAttribute("vertNor");
   }
@@ -251,7 +255,7 @@ public:
     ground = GameObject(
         groundPlane, vec3(0, 0, -6), vec3(0, 0, 0),
         vec3(0.5f * BOARD_SIZE, 0.5f * BOARD_SIZE, 0.5f * BOARD_SIZE),
-        vec3(0, 0, 0), vec3(0, 0, 0));
+        vec3(0, 0, 0), vec3(0, 0, 0), 0);
     renderObjects.push_back(&ground);
 
     // player mesh and gameobject
@@ -261,8 +265,8 @@ public:
     playerMesh->init();
     player = GameObject(playerMesh, vec3(0, 20, -6), vec3(0, PI / 4, 0),
                         vec3(0.5f, 0.7f, 0.3f), vec3(0, 0, 0),
-                        vec3(0.5f, 0.5f, 0.5f));
-    renderObjects.push_back(&player);
+                        vec3(0.5f, 0.5f, 0.5f), 0);
+    //renderObjects.push_back(&player);
   }
 
   void renderGameObject(shared_ptr<MatrixStack> Projection,
@@ -282,6 +286,8 @@ public:
     Model->scale(renderObject->scale);
     glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE,
                        value_ptr(Model->topMatrix()));
+    glUniform1i(prog->getUniform("collected"), renderObject->collected);
+    glUniform1f(prog->getUniform("colorTime"), cos(colorTime));
     renderObject->mesh->draw(prog);
     Model->popMatrix();
     Model->popMatrix();
@@ -289,6 +295,7 @@ public:
 
   void render(float deltaTime)
   {
+    colorTime += 10* deltaTime;
     player.position = playerView.position;
     // Get current frame buffer size.
     int width, height;
@@ -352,15 +359,17 @@ public:
 
   void CreateCollectable()
   {
-    if (collectablesCount >= BOARD_SIZE * BOARD_SIZE)
+    if (collectablesCount >= 10)
     {
       return;
     }
+    collectablesCount++;
     int x = rand() % BOARD_SIZE;
     int z = rand() % BOARD_SIZE;
     collectables[x][z] = Collectable(
         collectableMesh, vec3(0, 0, 0), vec3(0, PI / 8, 0),
-        vec3(0.15f, 0.15f, 0.25f), vec3(0, 0, 0), vec3(0.5f, 0.5f, 0.5f));
+        vec3(0.15f, 0.15f, 0.25f), vec3(0, 0, 0), vec3(0.5f, 0.5f, 0.5f),
+        0);
     // renderObjects.push_back(&collectables[x][z]);
     PositionCollectable(&collectables[x][z], x, z);
   }
@@ -521,6 +530,7 @@ public:
           {
             score += 100;
             collectables[x][y].moved = 2;
+            collectables[x][y].collected = 1;
             printf("Hit! Your score is %i\n", score);
           }
         }

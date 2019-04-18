@@ -21,13 +21,14 @@ public:
   GameObject();
   GameObject(std::shared_ptr<Shape> mesh, glm::vec3 position,
              glm::vec3 rotation, glm::vec3 scale, glm::vec3 velocity,
-             glm::vec3 extent);
+             glm::vec3 extent, int collected);
   std::shared_ptr<Shape> mesh;
   glm::vec3 position;
   glm::vec3 rotation;
   glm::vec3 scale;
   glm::vec3 velocity;
   glm::vec3 extent; // for bbox
+  int collected;
 };
 
 #endif // __GAMEOBJECT_H_

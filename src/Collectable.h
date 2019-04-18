@@ -21,8 +21,9 @@ public:
   int moved;
   Collectable(std::shared_ptr<Shape> mesh, glm::vec3 position,
               glm::vec3 rotation, glm::vec3 scale, glm::vec3 velocity,
-              glm::vec3 extent)
-      : GameObject(mesh, position, rotation, scale, velocity, extent) {
+              glm::vec3 extent, int collected)
+      : GameObject(mesh, position, rotation, scale, velocity, extent, 
+        collected) {
     moved = 0;
   }
   Collectable() { moved = -1; }
