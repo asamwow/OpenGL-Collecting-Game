@@ -384,7 +384,7 @@ public:
   void PositionCollectable(Collectable *collectable, int x, int z)
   {
     collectable->position =
-        vec3(x - BOARD_SIZE / 2 + 0.5f, 0, z - 6 - BOARD_SIZE / 2 + 0.5f);
+        vec3(x - BOARD_SIZE / 2 + 0.5f, -0.05f, z - 6 - BOARD_SIZE / 2 + 0.5f);
   }
 
   /// only used once, but made a function to break out of double loop
