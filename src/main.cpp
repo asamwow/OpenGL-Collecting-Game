@@ -400,7 +400,7 @@ public:
     }
     else if (x == BOARD_SIZE - 1)
     {
-      dirsFree[1] = 0;
+      dirsFree[0] = 0;
     }
     if (y == 0)
     {
