@@ -14,7 +14,7 @@ public:
     {
         w = a = s = d = r = f = 0;
         yaw = pitch = glm::vec3(0, 0, 0);
-        position = glm::vec3(0, -6, 0);
+        position = glm::vec3(0, 0, 0);
         targetPos = targetYaw = targetPitch = glm::vec3(0, 0, 0);
     }
     glm::mat4 process(double frametime, int mousex, int mousey,
