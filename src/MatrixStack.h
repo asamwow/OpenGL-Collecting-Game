@@ -14,7 +14,12 @@
 //#include "vec4.hpp"
 //#include "mat4x4.hpp"
 //#include "gtc/matrix_transform.hpp"
+#ifdef __APPLE__
 #include "MacIncludeGL.h"
+#endif
+#ifdef __linux__
+#include "LinuxIncludeGL.h"
+#endif
 
 class MatrixStack
 {

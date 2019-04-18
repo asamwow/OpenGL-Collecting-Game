@@ -8,8 +8,12 @@
 //#include <glm/gtc/type_ptr.hpp>
 //#include <gtc/type_ptr.hpp>
 
+#ifdef __APPLE__
 #include "MacIncludeGL.h"
-
+#endif
+#ifdef __linux__
+#include "LinuxIncludeGL.h"
+#endif
 #include <tiny_obj_loader/tiny_obj_loader.h>
 
 class Program;
