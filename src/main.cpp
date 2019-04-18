@@ -24,8 +24,10 @@
 // value_ptr for glm
 //#include <glm/gtc/matrix_transform.hpp>
 //#include <glm/gtc/type_ptr.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
+//#include <gtc/matrix_transform.hpp>
+//#include <gtc/type_ptr.hpp>
+
+#include "MacIncludeGL.h"
 
 #include "Camera.h"
 
@@ -37,7 +39,7 @@ using namespace glm;
 // game settings
 #define BOARD_SIZE 10
 #define PLAYER_SPEED 2.0f
-#define COLLECTABLE_SPAWN_DELAY 0.5f
+#define COLLECTABLE_SPAWN_DELAY 2.0f
 
 class Application : public EventCallbacks
 {
@@ -208,31 +210,31 @@ public:
 
   void initGeom(const std::string &resourceDirectory)
   {
-    // // load obj file for collectable
-    // vector<tinyobj::shape_t> TOshapes;
-    // vector<tinyobj::material_t> objMaterials;
-    // string errStr;
-    // // load in the mesh and make the shape(s)
-    // bool rc =
-    //     tinyobj::LoadObj(TOshapes, objMaterials, errStr,
-    //                      (resourceDirectory + "/MONARCH.OBJ").c_str());
-    // if (!rc) {
-    //   cerr << errStr << endl;
-    // } else {
-    //   collectableMesh = make_shared<Shape>();
-    //   collectableMesh->createShape(TOshapes[0]);
-    //   collectableMesh->measure();
-    //   collectableMesh->init();
-    // }
-    // gMin.x = collectableMesh->min.x;
-    // gMin.y = collectableMesh->min.y;
+    // load obj file for collectable
+    vector<tinyobj::shape_t> TOshapes;
+    vector<tinyobj::material_t> objMaterials;
+    string errStr;
+    // load in the mesh and make the shape(s)
+    bool rc =
+        tinyobj::LoadObj(TOshapes, objMaterials, errStr,
+                         (resourceDirectory + "/bunny.obj").c_str());
+    if (!rc) {
+      cerr << errStr << endl;
+    } else {
+      collectableMesh = make_shared<Shape>();
+      collectableMesh->createShape(TOshapes[0]);
+      collectableMesh->measure();
+      collectableMesh->init();
+    }
+    gMin.x = collectableMesh->min.x;
+    gMin.y = collectableMesh->min.y;
 
     // create mesh for collectable
-    collectableMesh = make_shared<Shape>();
-    collectableMesh->createShape(0);
-    collectableMesh->measure();
-    collectableMesh->init();
-
+   // collectableMesh = make_shared<Shape>();
+   // collectableMesh->createShape(0);
+   // collectableMesh->measure();
+   // collectableMesh->init();
+   
     // ground mesh and gameobject
     groundPlane = make_shared<Shape>();
     groundPlane->createShape(1);
@@ -249,7 +251,7 @@ public:
     playerMesh->createShape(0);
     playerMesh->measure();
     playerMesh->init();
-    player = GameObject(playerMesh, vec3(0, 0, -6), vec3(0, PI / 4, 0),
+    player = GameObject(playerMesh, vec3(0, 20, -6), vec3(0, PI / 4, 0),
                         vec3(0.5f, 0.7f, 0.3f), vec3(0, 0, 0),
                         vec3(0.5f, 0.5f, 0.5f));
     renderObjects.push_back(&player);
@@ -279,6 +281,7 @@ public:
 
   void render(float deltaTime)
   {
+    player.position = playerView.position;
     // Get current frame buffer size.
     int width, height;
     glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -348,7 +351,7 @@ public:
     int x = rand() % BOARD_SIZE;
     int z = rand() % BOARD_SIZE;
     collectables[x][z] = Collectable(
-        collectableMesh, vec3(0, 0, 0), vec3(0, -PI / 8, 0),
+        collectableMesh, vec3(0, 0, 0), vec3(0, PI / 8, 0),
         vec3(0.15f, 0.15f, 0.25f), vec3(0, 0, 0), vec3(0.5f, 0.5f, 0.5f));
     // renderObjects.push_back(&collectables[x][z]);
     PositionCollectable(&collectables[x][z], x, z);
@@ -357,7 +360,7 @@ public:
   void PositionCollectable(Collectable *collectable, int x, int z)
   {
     collectable->position =
-        vec3(x - BOARD_SIZE / 2 + 0.5f, 0.5f, z - 6 - BOARD_SIZE / 2 + 0.5f);
+        vec3(x - BOARD_SIZE / 2 + 0.5f, 0, z - 6 - BOARD_SIZE / 2 + 0.5f);
   }
 
   /// only used once, but made a function to break out of double loop
@@ -421,7 +424,7 @@ public:
     collectables[neighbor_x][neighbor_y].velocity =
         vec3(dirs[randomDir].x, 0, dirs[randomDir].y) / COLLECTABLE_SPAWN_DELAY;
     collectables[neighbor_x][neighbor_y].rotation.y =
-        randomDir * PI / 2 + 9 * PI / 16;
+        -randomDir * PI / 2 + 9 * PI / 16;
     collectables[neighbor_x][neighbor_y].moved = 1;
     return 1;
   }
@@ -461,6 +464,9 @@ public:
   /// for each collectable, check if its extent is within the player's extent
   void CheckCollisions()
   {
+    //vec3 playerStart = player.position - player.extent;
+    //vec3 playerEnd = player.position + player.extent;
+    player.position = -playerView.position;
     vec3 playerStart = player.position - player.extent;
     vec3 playerEnd = player.position + player.extent;
     for (int x = 0; x < BOARD_SIZE; x++)
@@ -496,10 +502,13 @@ public:
           {
             continue;
           }
-          collectables[x][y].moved = -1;
           collectables[x][y].velocity = vec3(0, 0, 0);
-          score += 100;
-          printf("Hit! Your score is %i\n", score);
+          if(collectables[x][y].moved != 2)
+          {
+            score += 100;
+            collectables[x][y].moved = 2;          
+            printf("Hit! Your score is %i\n", score);
+          }
         }
       }
     }

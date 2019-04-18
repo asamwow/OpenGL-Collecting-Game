@@ -1,5 +1,6 @@
 #include "Camera.h"
-#define MAXDEPTH 20
+#include <stdio.h>
+#define MAXDEPTH -0.5
 #define MINDEPTH -20
 
 glm::mat4 Camera::process(double frametime)
@@ -21,11 +22,11 @@ glm::mat4 Camera::process(double frametime)
     else if (f == 1 && targetPitch.x < 3.14159 / 2.0)
         xangle = 2 * frametime;
 
-    targetYaw.y += yangle;
+    targetYaw.y += yangle; 
     targetPitch.x += xangle;
 
-    yaw += -0.02f * yaw + 0.02f * targetYaw;
-    pitch += -0.02f * pitch + 0.02f * targetPitch;
+    yaw += -0.1f * yaw + 0.1f * targetYaw;
+    pitch += -0.1f * pitch + 0.1f * targetPitch;
 
     glm::mat4 Ry = glm::rotate(glm::mat4(1), yaw.y, glm::vec3(0, 1, 0));
     glm::mat4 Rx = glm::rotate(glm::mat4(1), pitch.x, glm::vec3(1, 0, 0));
@@ -34,12 +35,13 @@ glm::mat4 Camera::process(double frametime)
     dir = dir * Rx * Ry;
 
     targetPos += glm::vec3(dir.x, dir.y, dir.z);
-    position += -0.02f * position + 0.02f * targetPos;
+    position += -0.1f * position + 0.1f * targetPos;
 
     if (targetPos.y > MAXDEPTH)
         targetPos.y = MAXDEPTH;
     else if (targetPos.y < MINDEPTH)
         targetPos.y = MINDEPTH;
+    
     glm::mat4 T = glm::translate(glm::mat4(1), position);
     return Rx * Ry * T;
 }
